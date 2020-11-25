@@ -21,6 +21,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 
@@ -105,6 +106,7 @@ public class SumLambdaExample {
     streamsConfiguration.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 10 * 1000);
 
     final Topology topology = getTopology();
+    System.out.println(topology.describe());
     final KafkaStreams streams = new KafkaStreams(topology, streamsConfiguration);
     // Always (and unconditionally) clean local state prior to starting the processing topology.
     // We opt for this unconditional call here because this will make it easier for you to play around with the example
@@ -129,7 +131,8 @@ public class SumLambdaExample {
     // We don't really care about the keys of the input records;  for simplicity, we assume them
     // to be Integers, too, because we will re-key the stream later on, and the new key will be
     // of type Integer.
-    final KStream<Void, Integer> input = builder.stream(NUMBERS_TOPIC);
+    final KStream<Integer, Integer> input = builder.stream(NUMBERS_TOPIC,
+            Consumed.with(Serdes.Integer(), Serdes.Integer()));
 
     final KTable<Integer, Integer> sumOfOddNumbers = input
       // We are only interested in odd numbers.
@@ -142,7 +145,8 @@ public class SumLambdaExample {
       .selectKey((k, v) -> 1)
       // no need to specify explicit serdes because the resulting key and value types match our default serde settings
       .groupByKey()
-      // Add the numbers to compute the sum.
+
+            // Add the numbers to compute the sum.
       .reduce((v1, v2) -> v1 + v2);
 
     sumOfOddNumbers.toStream().to(SUM_OF_ODD_NUMBERS_TOPIC);

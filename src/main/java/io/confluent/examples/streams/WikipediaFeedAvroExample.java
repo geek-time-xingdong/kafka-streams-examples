@@ -151,6 +151,7 @@ public class WikipediaFeedAvroExample {
         // no need to specify explicit serdes because the resulting key and value types match our default serde settings
         .groupByKey()
         .count();
+    System.out.println(builder.build().describe());
 
     // write to the result topic, need to override serdes
     aggregated.toStream().to(WIKIPEDIA_STATS, Produced.with(stringSerde, longSerde));

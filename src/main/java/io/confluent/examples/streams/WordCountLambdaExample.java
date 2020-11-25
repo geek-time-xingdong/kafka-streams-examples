@@ -126,6 +126,7 @@ public class WordCountLambdaExample {
     // Define the processing topology of the Streams application.
     final StreamsBuilder builder = new StreamsBuilder();
     createWordCountStream(builder);
+    System.out.println(builder.build().describe());
     final KafkaStreams streams = new KafkaStreams(builder.build(), streamsConfiguration);
 
     // Always (and unconditionally) clean local state prior to starting the processing topology.
@@ -183,27 +184,17 @@ public class WordCountLambdaExample {
    * @param builder StreamsBuilder to use
    */
   static void createWordCountStream(final StreamsBuilder builder) {
-    // Construct a `KStream` from the input topic "streams-plaintext-input", where message values
-    // represent lines of text (for the sake of this example, we ignore whatever may be stored
-    // in the message keys).  The default key and value serdes will be used.
+    //此行代码是从kafka的inputTopic分区中消费数据
     final KStream<String, String> textLines = builder.stream(inputTopic);
-
     final Pattern pattern = Pattern.compile("\\W+", Pattern.UNICODE_CHARACTER_CLASS);
-
     final KTable<String, Long> wordCounts = textLines
-      // Split each text line, by whitespace, into words.  The text lines are the record
-      // values, i.e. we can ignore whatever data is in the record keys and thus invoke
-      // `flatMapValues()` instead of the more generic `flatMap()`.
+            //此处使用flatMapValues切分每一行消息， 可以理解为一个for循环不断的切分里面的值为一个个单词
       .flatMapValues(value -> Arrays.asList(pattern.split(value.toLowerCase())))
-      // Group the split data by word so that we can subsequently count the occurrences per word.
-      // This step re-keys (re-partitions) the input data, with the new record key being the words.
-      // Note: No need to specify explicit serdes because the resulting key and value types
-      // (String and String) match the application's default serdes.
+            //这里根据每一个已经切分好的单词进行分组、类似于mysql中的group by语法
       .groupBy((keyIgnored, word) -> word)
-      // Count the occurrences of each word (record key).
+            // 根据已经分组好的单子、计算出现的次数
       .count();
-
-    // Write the `KTable<String, Long>` to the output topic.
+    //将结果写出到outPutTopic中去
     wordCounts.toStream().to(outputTopic, Produced.with(Serdes.String(), Serdes.Long()));
   }
 

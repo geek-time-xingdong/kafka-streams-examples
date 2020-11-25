@@ -40,10 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
-import static io.confluent.examples.streams.GlobalKTablesExample.CUSTOMER_TOPIC;
-import static io.confluent.examples.streams.GlobalKTablesExample.ENRICHED_ORDER_TOPIC;
-import static io.confluent.examples.streams.GlobalKTablesExample.ORDER_TOPIC;
-import static io.confluent.examples.streams.GlobalKTablesExample.PRODUCT_TOPIC;
+import static io.confluent.examples.streams.GlobalKTablesExample.*;
 
 /**
  * This is a sample driver for the {@link GlobalKTablesExample}.
@@ -93,6 +90,7 @@ public class GlobalKTablesExampleDriver {
     int received = 0;
     while(received < expected) {
       final ConsumerRecords<Long, EnrichedOrder> records = consumer.poll(Duration.ofMillis(Long.MAX_VALUE));
+      System.out.println("收到结果:");
       records.forEach(record -> System.out.println(record.value()));
       received += records.count();
     }

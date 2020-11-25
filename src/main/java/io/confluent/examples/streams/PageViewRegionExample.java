@@ -27,6 +27,7 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
@@ -39,7 +40,6 @@ import org.apache.kafka.streams.kstream.Windowed;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Demonstrates how to perform a join between a KStream and a KTable, i.e. an example of a stateful
@@ -220,7 +220,9 @@ public class PageViewRegionExample {
     // write to the result topic
     viewsByRegionForConsole.to("PageViewsByRegion", Produced.with(stringSerde, longSerde));
 
-    final KafkaStreams streams = new KafkaStreams(builder.build(), streamsConfiguration);
+    Topology           topology   = builder.build();
+    System.out.println(topology.describe());
+    final KafkaStreams streams = new KafkaStreams(topology, streamsConfiguration);
     // Always (and unconditionally) clean local state prior to starting the processing topology.
     // We opt for this unconditional call here because this will make it easier for you to play around with the example
     // when resetting the application for doing a re-run (via the Application Reset Tool,
